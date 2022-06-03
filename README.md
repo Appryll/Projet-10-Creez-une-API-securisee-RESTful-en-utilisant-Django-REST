@@ -1,6 +1,6 @@
 # Projet 10 - Créez une API sécurisée RESTful en utilisant Django REST - OpenClassrooms
 
-<img src="img/logoSoftDesk.png" width="200" height="250">
+<img src="img/logoSoftDesk.png" width="250" height="250">
 
 Cet application permet de remonter et suivre des problèmes techniques (issue tracking system).
 
