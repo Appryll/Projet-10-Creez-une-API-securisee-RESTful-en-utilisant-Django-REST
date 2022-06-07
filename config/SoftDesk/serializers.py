@@ -4,7 +4,7 @@ from SoftDesk.models import Projects, Contributors, User, Issues, Comments
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'first_name', 'last_name', 'email')
+        fields = ('id', 'first_name', 'last_name', 'email')
 
 class ProjectsSerializer(ModelSerializer):
     author_user_id = UserSerializer()

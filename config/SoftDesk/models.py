@@ -4,15 +4,6 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
-class Users(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user')
-    first_name = models.CharField(max_length=128, blank=True, null=True)
-    last_name = models.CharField(max_length=128, blank=True, null=True)
-    email = models.EmailField(max_length=128, blank=True, null=True)
-    
-    def __str__(self):
-        return f'User : {self.first_name} {self.last_name}'
-
 class Projects(models.Model):
 
     TYPES = (

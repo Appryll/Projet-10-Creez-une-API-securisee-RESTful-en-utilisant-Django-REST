@@ -18,6 +18,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from SoftDesk.views import ProjectsViewset, IssuesViewset
+from account.views import registration_view
 
 router = routers.SimpleRouter()
 router.register('projects', ProjectsViewset, basename='projects')
@@ -27,4 +28,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('api/', include(router.urls)),
+    path('api/signup/', registration_view, name="signup"),
 ]

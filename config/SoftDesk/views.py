@@ -1,10 +1,10 @@
-from rest_framework.viewsets import ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
 
 from SoftDesk.models import Projects, Issues
 from SoftDesk.serializers import ProjectsSerializer, IssuesSerializer
 
 
-class ProjectsViewset(ReadOnlyModelViewSet):
+class ProjectsViewset(ModelViewSet):
 
     serializer_class = ProjectsSerializer
 
@@ -15,7 +15,7 @@ class ProjectsViewset(ReadOnlyModelViewSet):
             queryset = queryset.filter(projects_id = projects_id)
         return queryset
 
-class IssuesViewset(ReadOnlyModelViewSet):
+class IssuesViewset(ModelViewSet):
 
     serializer_class = IssuesSerializer
 
