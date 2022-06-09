@@ -3,7 +3,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-
 class Projects(models.Model):
 
     TYPES = (
@@ -76,7 +75,7 @@ class Issues(models.Model):
 class Comments(models.Model):
     description = models.CharField(max_length=1028)
     author_user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    issue_id = models.ForeignKey(Issues, on_delete=models.CASCADE, related_name="issue")
+    issues_id = models.ForeignKey(Issues, on_delete=models.CASCADE, related_name="issue")
     created_time = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

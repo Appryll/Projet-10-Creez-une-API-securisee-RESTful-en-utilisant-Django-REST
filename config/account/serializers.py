@@ -7,7 +7,7 @@ class UserSerializer(serializers.Serializer):
 	first_name = serializers.CharField()
 	last_name = serializers.CharField()
 	email = serializers.EmailField()
-	password = serializers.CharField()
+	password = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 	password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
 
