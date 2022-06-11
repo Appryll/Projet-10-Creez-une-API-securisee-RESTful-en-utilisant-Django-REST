@@ -15,14 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-# from rest_framework import routers
 from rest_framework_nested import routers
 
 from SoftDesk.views import ProjectsViewset, IssuesViewset, UserViewset, comments_list, comment_detail
 
 router = routers.SimpleRouter()
 router.register('projects', ProjectsViewset, basename='projects')
-# router.register('issues',IssuesViewset, basename='issues')
 
 user_router = routers.NestedSimpleRouter(router, 'projects', lookup='projects')
 user_router.register('user', UserViewset, basename='projects-user')
@@ -30,16 +28,15 @@ user_router.register('user', UserViewset, basename='projects-user')
 issues_router = routers.NestedSimpleRouter(router, 'projects', lookup='projects')
 issues_router.register('issues', IssuesViewset, basename='projects-issues')
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-    path('api/', include('account.urls')),
+    path('api-auth/', include('rest_framework.urls')), #log in http://127.0.0.1:8000/
+    path('', include('account.urls')),
 
-    path('api/', include(router.urls)),
-    path('api/', include(user_router.urls)),
-    path('api/', include(issues_router.urls)),
+    path('', include(router.urls)),
+    path('', include(user_router.urls)),
+    path('', include(issues_router.urls)),
 
-    path('api/projects/<int:project_id>/issues/<int:issue_id>/comments/', comments_list),    
-    path('api/projects/<int:project_id>/issues/<int:issue_id>/comments/<int:comment_id>/', comment_detail),    
+    path('projects/<int:project_id>/issues/<int:issue_id>/comments/', comments_list),    
+    path('projects/<int:project_id>/issues/<int:issue_id>/comments/<int:comment_id>/', comment_detail),    
 ]
