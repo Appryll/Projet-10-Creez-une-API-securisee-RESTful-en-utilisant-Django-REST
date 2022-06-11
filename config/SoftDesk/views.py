@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import action
 
 from SoftDesk.models import Projects, Issues, Comments
-from SoftDesk.permissions import ViewContributor_ProjectPermissions_
+from SoftDesk.permissions import PermissionsViewContributor, PermissionsCommentAuthor
 from SoftDesk.serializers import ProjectsSerializer, IssuesSerializer, CommentsSerializer
 from account.serializers import UserSerializer
 
@@ -17,7 +17,7 @@ class ProjectsViewset(ModelViewSet):
     Permissions: only users added as a contributor can be authorized to access a project
     """
     serializer_class = ProjectsSerializer
-    permission_classes = [ViewContributor_ProjectPermissions_]
+    permission_classes = [PermissionsViewContributor]
 
     def get_queryset(self):
         queryset = Projects.objects.filter(author_user_id=self.request.user) | Projects.objects.filter(contributor__user_id=self.request.user)
@@ -56,7 +56,6 @@ class UserViewset(ModelViewSet):
 
 #Commnets
 @api_view(['GET', 'POST'])
-# @permission_classes([])
 def comments_list(request, project_id, issue_id):
     """
     List all comments, or create a new comment.
@@ -81,6 +80,7 @@ def comments_list(request, project_id, issue_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([PermissionsCommentAuthor])
 def comment_detail(request, project_id, issue_id, comment_id):
     """
     Retrieve, update or delete comments.
@@ -88,6 +88,7 @@ def comment_detail(request, project_id, issue_id, comment_id):
     """
     get_object_or_404(Projects, id=project_id)
     issue = get_object_or_404(Issues, id=issue_id)
+    # print(issue.id)
     comment = get_object_or_404(Comments, id=comment_id)
 
     if request.method == 'GET':
