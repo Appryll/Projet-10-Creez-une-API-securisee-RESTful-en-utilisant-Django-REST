@@ -73,3 +73,6 @@ Dans le terminal, naviguer vers le dossier souhaité.
 
 ------------------------------------------------------------------------------------------------------------------------
 
+###### - Générer un rapport flake8
+
+    $ flake8 --format=html --htmldir=flake8_rapport

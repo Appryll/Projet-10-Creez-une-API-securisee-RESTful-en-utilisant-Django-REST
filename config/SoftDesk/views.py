@@ -4,42 +4,148 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from rest_framework.decorators import action
 
-from SoftDesk.models import Projects, Issues, Comments
-from SoftDesk.permissions import PermissionsViewContributor, PermissionsCommentAuthor
-from SoftDesk.serializers import ProjectsSerializer, IssuesSerializer, CommentsSerializer
+from SoftDesk.models import Projects, Issues, Comments, Contributors
+from SoftDesk.serializers import ProjectsSerializer, ContributorsSerializer, IssuesSerializer, CommentsSerializer
 from account.serializers import UserSerializer
+from SoftDesk.permissions import (PermissionsViewContributor, PermissionsProjectAuthor, 
+                                    PermissionsCommentAuthor, 
+                                    PermissionsContributorAuthorProjet, 
+                                    PermissionsIssueAuthor, 
+                                    PermissionsIssueAuthorOrContributor )
 
-class ProjectsViewset(ModelViewSet):
-    """
-    A simple ModelViewSet to create, view, list, edit and delete projects
-    Permissions: only users added as a contributor can be authorized to access a project
-    """
-    serializer_class = ProjectsSerializer
-    permission_classes = [PermissionsViewContributor]
+####################################################PROJECT#######################################################
+@api_view(['GET', 'POST']) 
+@permission_classes([PermissionsViewContributor])
+def project_list(request):
+    if request.method == 'GET':
+        projects = Projects.objects.filter(author_user_id=request.user.id) | Projects.objects.filter(contributor__user_id=request.user.id)
+        serializer = ProjectsSerializer(projects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def get_queryset(self):
-        queryset = Projects.objects.filter(author_user_id=self.request.user) | Projects.objects.filter(contributor__user_id=self.request.user)
-        # projects_id = self.request.GET.get('projects_id')
-        # if projects_id is not None:
-        #     queryset = queryset.filter(projects_id = projects_id)
-        return queryset
+    elif request.method == 'POST':
+        data = request.data.copy()
+        data['author_user_id'] = request.user.id
 
-class IssuesViewset(ModelViewSet):
-    """
-    A simple ModelViewSet to create, view, list, edit and delete issues
-    Permissions: An issue can only be updated or deleted by its author, but it is remain visible to all contributors to the project
-    """
-    serializer_class = IssuesSerializer
-    # permission_classes = []
+        serializer = ProjectsSerializer(data=data)
+        if serializer.is_valid():
+            project = serializer.save()
+            Contributors.objects.create(user_id=request.user, project_id=project, role='L\'AUTEUR')
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def get_queryset(self):
-        queryset = Issues.objects.all()
-        # issues_id = self.request.GET.get('issues_id')
-        # if issues_id is not None:
-        #     queryset = queryset.filter(issues_id = issues_id)
-        return queryset
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([PermissionsProjectAuthor])
+def project_detail(request, project_id):
+    project = get_object_or_404(Projects, id=project_id)
+
+    if request.method == 'GET':
+        serializer = ProjectsSerializer(project)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'PUT':
+        data = request.data.copy()
+        data['author_user_id'] = project.author_user_id.id
+
+        serializer = ProjectsSerializer(project, data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        project.delete()
+        return Response('Project deleted successfully!', status=status.HTTP_204_NO_CONTENT)
+
+####################################################Contributor#######################################################
+
+@api_view(['GET', 'POST'])
+def contributor_list(request, project_id):
+    project = get_object_or_404(Projects, id=project_id)
+
+    if request.method == 'GET':
+        contributors = Contributors.objects.filter(project_id=project)
+        serializer = ContributorsSerializer(contributors, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        if request.user.id == project.author_user_id.id:
+            data = request.data.copy()
+            data['project_id'] = project.id
+
+            serializer = ContributorsSerializer(data=data)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response('You do not have permission to add contributors to the project. Only the author of the project has that right.')
+
+@api_view(['DELETE'])
+@permission_classes([PermissionsContributorAuthorProjet])
+def contributor_detail(request, contributor_id, project_id):
+    contributor = get_object_or_404(Contributors, id=contributor_id)
+    project = get_object_or_404(Projects, id=project_id)
+
+    if request.method == 'DELETE':
+        contributor.delete()
+        return Response('Contributor deleted successfully!', status=status.HTTP_204_NO_CONTENT)
+
+
+###################################################Issues#########################################################
+@api_view(['GET', 'POST'])
+@permission_classes([PermissionsIssueAuthorOrContributor,])
+def issue_list(request, project_id):
+    """
+    List all issues, or create a new issue.
+    Permissions: Only authenticated users can access.
+    """
+    project = get_object_or_404(Projects, id=project_id)
+
+    if request.method == 'GET':
+        issues = Issues.objects.filter(project_id=project_id)
+        serializer = IssuesSerializer(issues, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        data = request.data.copy()
+        data['project_id'] = project_id
+        data['author_user_id'] = request.user.id
+ 
+        serializer = IssuesSerializer(data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([PermissionsIssueAuthor])
+def issue_detail(request, project_id, issue_id):
+    """
+    Retrieve, update or delete issues.
+    Permissions:An issue can only be updated or deleted by its author, but it is remain visible to all contributors to the project.
+    """
+    project = get_object_or_404(Projects, id=project_id)
+    issue = get_object_or_404(Issues, id=issue_id)
+
+    if request.method == 'PUT':
+        data = request.data.copy()
+        data['project_id'] = project.id
+        data['author'] = issue.author.id
+
+        serializer = IssuesSerializer(issue, data=data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        issue.delete()
+        return Response('Issue successfully deleted.', status=status.HTTP_204_NO_CONTENT)
 
 class UserViewset(ModelViewSet):
     """
@@ -49,12 +155,9 @@ class UserViewset(ModelViewSet):
 
     def get_queryset(self):
         queryset = User.objects.all()
-        # user_id = self.request.GET.get('user_id')
-        # if user_id is not None:
-        #     queryset = queryset.filter(user_id = user_id)
         return queryset
 
-#Commnets
+####################################################COMMENTS####################################################################
 @api_view(['GET', 'POST'])
 def comments_list(request, project_id, issue_id):
     """
@@ -88,7 +191,6 @@ def comment_detail(request, project_id, issue_id, comment_id):
     """
     get_object_or_404(Projects, id=project_id)
     issue = get_object_or_404(Issues, id=issue_id)
-    # print(issue.id)
     comment = get_object_or_404(Comments, id=comment_id)
 
     if request.method == 'GET':
