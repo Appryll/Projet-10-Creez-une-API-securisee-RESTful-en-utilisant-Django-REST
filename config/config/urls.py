@@ -28,11 +28,13 @@ urlpatterns = [
 
     path('projects/', project_list),
     path('projects/<int:project_id>/', project_detail),
+
     path('projects/<int:project_id>/users/', contributor_list),
     path('projects/<int:project_id>/users/<int:contributor_id>/', contributor_detail),
 
     path('projects/<int:project_id>/issues/', issue_list),
     path('projects/<int:project_id>/issues/<int:issue_id>/', issue_detail),
+    
     path('projects/<int:project_id>/issues/<int:issue_id>/comments/', comments_list),    
     path('projects/<int:project_id>/issues/<int:issue_id>/comments/<int:comment_id>/', comment_detail),    
 ]

@@ -11,8 +11,7 @@ from account.serializers import UserSerializer
 from SoftDesk.permissions import (PermissionsViewContributor, PermissionsProjectAuthor, 
                                     PermissionsCommentAuthor, 
                                     PermissionsContributorAuthorProjet, 
-                                    PermissionsIssueAuthor, 
-                                    PermissionsIssueAuthorOrContributor )
+                                    PermissionsIssueAuthor)
 
 ####################################################PROJECT#######################################################
 @api_view(['GET', 'POST']) 
@@ -60,7 +59,7 @@ def project_detail(request, project_id):
         project.delete()
         return Response('Project deleted successfully!', status=status.HTTP_204_NO_CONTENT)
 
-####################################################Contributor#######################################################
+####################################################CONTRIBUTOR#######################################################
 
 @api_view(['GET', 'POST'])
 def contributor_list(request, project_id):
@@ -71,7 +70,7 @@ def contributor_list(request, project_id):
         serializer = ContributorsSerializer(contributors, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    elif request.method == 'POST':
+    elif request.method == 'POST': #seul l'auteur du projet peut ajouter des contributeurs
         if request.user.id == project.author_user_id.id:
             data = request.data.copy()
             data['project_id'] = project.id
@@ -97,7 +96,7 @@ def contributor_detail(request, contributor_id, project_id):
 
 ###################################################Issues#########################################################
 @api_view(['GET', 'POST'])
-@permission_classes([PermissionsIssueAuthorOrContributor,])
+@permission_classes([])
 def issue_list(request, project_id):
     """
     List all issues, or create a new issue.
@@ -135,7 +134,7 @@ def issue_detail(request, project_id, issue_id):
     if request.method == 'PUT':
         data = request.data.copy()
         data['project_id'] = project.id
-        data['author'] = issue.author.id
+        data['author_user_id'] = issue.author_user_id.id
 
         serializer = IssuesSerializer(issue, data=data)
         if serializer.is_valid(raise_exception=True):
@@ -146,16 +145,6 @@ def issue_detail(request, project_id, issue_id):
     elif request.method == 'DELETE':
         issue.delete()
         return Response('Issue successfully deleted.', status=status.HTTP_204_NO_CONTENT)
-
-class UserViewset(ModelViewSet):
-    """
-    A simple ModelViewSet to create, view, list, edit and delete users
-    """
-    serializer_class = UserSerializer
-
-    def get_queryset(self):
-        queryset = User.objects.all()
-        return queryset
 
 ####################################################COMMENTS####################################################################
 @api_view(['GET', 'POST'])
