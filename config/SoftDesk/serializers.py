@@ -3,7 +3,6 @@ from SoftDesk.models import Projects, Contributors, Issues, Comments
 from rest_framework import serializers
 
 class ProjectsSerializer(ModelSerializer):
-    # author_user_id = serializers.ReadOnlyField(source='author_user_id.username') #'author_user_id' : 'username'
     class Meta:
         model = Projects
         fields = "__all__"

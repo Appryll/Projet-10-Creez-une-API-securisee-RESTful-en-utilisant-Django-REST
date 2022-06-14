@@ -1,21 +1,19 @@
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
-
+from rest_framework.permissions import IsAuthenticated
 from SoftDesk.models import Projects, Issues, Comments, Contributors
-from SoftDesk.serializers import ProjectsSerializer, ContributorsSerializer, IssuesSerializer, CommentsSerializer
-from account.serializers import UserSerializer
+from SoftDesk.serializers import (ProjectsSerializer, ContributorsSerializer, 
+                                    IssuesSerializer, CommentsSerializer)
 from SoftDesk.permissions import (PermissionsViewContributor, PermissionsProjectAuthor, 
                                     PermissionsCommentAuthor, 
                                     PermissionsContributorAuthorProjet, 
                                     PermissionsIssueAuthor)
 
-####################################################PROJECT#######################################################
+
 @api_view(['GET', 'POST']) 
-@permission_classes([PermissionsViewContributor])
+@permission_classes([PermissionsViewContributor, IsAuthenticated])
 def project_list(request):
     if request.method == 'GET':
         projects = Projects.objects.filter(author_user_id=request.user.id) | Projects.objects.filter(contributor__user_id=request.user.id)
@@ -36,7 +34,7 @@ def project_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([PermissionsProjectAuthor])
+@permission_classes([PermissionsProjectAuthor, IsAuthenticated])
 def project_detail(request, project_id):
     project = get_object_or_404(Projects, id=project_id)
 
@@ -59,9 +57,10 @@ def project_detail(request, project_id):
         project.delete()
         return Response('Project deleted successfully!', status=status.HTTP_204_NO_CONTENT)
 
-####################################################CONTRIBUTOR#######################################################
+
 
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def contributor_list(request, project_id):
     project = get_object_or_404(Projects, id=project_id)
 
@@ -70,7 +69,8 @@ def contributor_list(request, project_id):
         serializer = ContributorsSerializer(contributors, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    elif request.method == 'POST': #seul l'auteur du projet peut ajouter des contributeurs
+    elif request.method == 'POST': 
+        #seul l'auteur du projet peut ajouter des contributeurs
         if request.user.id == project.author_user_id.id:
             data = request.data.copy()
             data['project_id'] = project.id
@@ -83,8 +83,9 @@ def contributor_list(request, project_id):
         else:
             return Response('You do not have permission to add contributors to the project. Only the author of the project has that right.')
 
+
 @api_view(['DELETE'])
-@permission_classes([PermissionsContributorAuthorProjet])
+@permission_classes([PermissionsContributorAuthorProjet, IsAuthenticated])
 def contributor_detail(request, contributor_id, project_id):
     contributor = get_object_or_404(Contributors, id=contributor_id)
     project = get_object_or_404(Projects, id=project_id)
@@ -94,9 +95,9 @@ def contributor_detail(request, contributor_id, project_id):
         return Response('Contributor deleted successfully!', status=status.HTTP_204_NO_CONTENT)
 
 
-###################################################Issues#########################################################
+
 @api_view(['GET', 'POST'])
-@permission_classes([])
+@permission_classes([IsAuthenticated])
 def issue_list(request, project_id):
     """
     List all issues, or create a new issue.
@@ -122,7 +123,7 @@ def issue_list(request, project_id):
 
 
 @api_view(['PUT', 'DELETE'])
-@permission_classes([PermissionsIssueAuthor])
+@permission_classes([PermissionsIssueAuthor, IsAuthenticated])
 def issue_detail(request, project_id, issue_id):
     """
     Retrieve, update or delete issues.
@@ -146,8 +147,9 @@ def issue_detail(request, project_id, issue_id):
         issue.delete()
         return Response('Issue successfully deleted.', status=status.HTTP_204_NO_CONTENT)
 
-####################################################COMMENTS####################################################################
+
 @api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def comments_list(request, project_id, issue_id):
     """
     List all comments, or create a new comment.
@@ -171,8 +173,9 @@ def comments_list(request, project_id, issue_id):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([PermissionsCommentAuthor])
+@permission_classes([PermissionsCommentAuthor, IsAuthenticated])
 def comment_detail(request, project_id, issue_id, comment_id):
     """
     Retrieve, update or delete comments.

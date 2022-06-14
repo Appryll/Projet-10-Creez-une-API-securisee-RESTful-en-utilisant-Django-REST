@@ -34,7 +34,7 @@ urlpatterns = [
 
     path('projects/<int:project_id>/issues/', issue_list),
     path('projects/<int:project_id>/issues/<int:issue_id>/', issue_detail),
-    
+
     path('projects/<int:project_id>/issues/<int:issue_id>/comments/', comments_list),    
     path('projects/<int:project_id>/issues/<int:issue_id>/comments/<int:comment_id>/', comment_detail),    
 ]

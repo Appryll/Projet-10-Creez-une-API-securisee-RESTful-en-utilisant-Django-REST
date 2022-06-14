@@ -1,7 +1,8 @@
 from rest_framework.permissions import BasePermission
 from rest_framework import permissions
 from rest_framework.generics import get_object_or_404
-from SoftDesk.models import Projects, Comments, Issues, Contributors
+from SoftDesk.models import Projects, Comments, Issues
+
 
 class PermissionsViewContributor(BasePermission):
     def has_permission(self, request, view):
@@ -29,7 +30,7 @@ class PermissionsContributorAuthorProjet(BasePermission):
         if request.user.id == project.author_user_id.id:
             return True
         return False
-        
+
 class PermissionsIssueAuthor(BasePermission):
     message = "You do not have permission to perform this action."
     def has_permission(self, request, view):
@@ -38,35 +39,10 @@ class PermissionsIssueAuthor(BasePermission):
             return True
         return False
 
-        # issue = get_object_or_404(Issues, id=view.kwargs['issue_id'])
-        # print(issue.author_user_id.id)
-        # print(request.user.id)
-        # if request.user.id == issue.author_user_id.id:
-        #     return True
-        # return False
-
-# class PermissionsIssueAuthorOrContributor(BasePermission):
-#     message = "You do not have permission to perform this action. Must have copyright or contributor"
-#     def has_permission(self, request, view, project):
-        
-#         contributor = Contributors.objects.filter(project=project) & Contributors.objects.filter(user=request.user)
-#         if contributor.exists():
-#             return True
-#         else:
-#             return False
-        # issue = get_object_or_404(Issues, id=view.kwargs['issue_id'])
-        # print(issue)
-        # print(issue.id)
-        # print(request.user.id)
-        # if request.user.id == issue.id or issue.assignee_user_id.id:
-        #     return True
-        # return False
-
 class PermissionsCommentAuthor(BasePermission):
     message = "You do not have permission to perform this action."
     def has_permission(self, request, view):
-        comment = get_object_or_404(Comments, id=view.kwargs['user_id'])
+        comment = get_object_or_404(Comments, id=view.kwargs['comment_id'])
         if request.user.id == comment.author_user_id.id:
             return True
         return False
-        
