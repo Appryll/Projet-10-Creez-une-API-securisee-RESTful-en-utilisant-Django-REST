@@ -23,7 +23,7 @@ class PermissionsProjectAuthor(BasePermission):
         return False
 
 class PermissionsContributorAuthorProjet(BasePermission):
-    message = "You do not have permission to perform this action. Must have copyright permissionYou \
+    message = "You do not have permission to perform this action. Must have copyright permission. You \
     are a contributor and cannot modify or delete other contributors. You must have author permissions."
     def has_permission(self, request, view):
         project = get_object_or_404(Projects, id=view.kwargs['project_id'])

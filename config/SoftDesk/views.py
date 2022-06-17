@@ -15,6 +15,10 @@ from SoftDesk.permissions import (PermissionsViewContributor, PermissionsProject
 @api_view(['GET', 'POST']) 
 @permission_classes([PermissionsViewContributor, IsAuthenticated])
 def project_list(request):
+    """
+    List all projects in which the utilisateur is an author or was affected as a contributor, or create a new projet.
+    Permissions: Only authenticated users can access.
+    """
     if request.method == 'GET':
         projects = Projects.objects.filter(author_user_id=request.user.id) | Projects.objects.filter(contributor__user_id=request.user.id)
         serializer = ProjectsSerializer(projects, many=True)
@@ -36,6 +40,11 @@ def project_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([PermissionsProjectAuthor, IsAuthenticated])
 def project_detail(request, project_id):
+    """
+    Retrieve, update or delete issues.
+    Permissions: Only authenticated users can access. 
+                 Only the author of the project can delete or modify the project
+    """
     project = get_object_or_404(Projects, id=project_id)
 
     if request.method == 'GET':
@@ -62,6 +71,11 @@ def project_detail(request, project_id):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def contributor_list(request, project_id):
+    """
+    List all contributors, or create a new contributor.
+    Permissions: Only authenticated users can access.
+                 Only the project author can attach new contributors to the project
+    """
     project = get_object_or_404(Projects, id=project_id)
 
     if request.method == 'GET':
@@ -87,6 +101,11 @@ def contributor_list(request, project_id):
 @api_view(['DELETE'])
 @permission_classes([PermissionsContributorAuthorProjet, IsAuthenticated])
 def contributor_detail(request, contributor_id, project_id):
+    """
+    Delete contributors
+    Permissions: Only authenticated users can access.
+                 Only the project author can remove project contributors
+    """
     contributor = get_object_or_404(Contributors, id=contributor_id)
     project = get_object_or_404(Projects, id=project_id)
 
@@ -127,7 +146,8 @@ def issue_list(request, project_id):
 def issue_detail(request, project_id, issue_id):
     """
     Retrieve, update or delete issues.
-    Permissions:An issue can only be updated or deleted by its author, but it is remain visible to all contributors to the project.
+    Permissions: Only authenticated users can access.
+                 Only the author of the problem can modify or delete it.
     """
     project = get_object_or_404(Projects, id=project_id)
     issue = get_object_or_404(Issues, id=issue_id)
@@ -153,6 +173,7 @@ def issue_detail(request, project_id, issue_id):
 def comments_list(request, project_id, issue_id):
     """
     List all comments, or create a new comment.
+    Permissions: Only authenticated users can access.
     """
     get_object_or_404(Projects, id=project_id)
     issue = get_object_or_404(Issues, id=issue_id)
@@ -179,7 +200,8 @@ def comments_list(request, project_id, issue_id):
 def comment_detail(request, project_id, issue_id, comment_id):
     """
     Retrieve, update or delete comments.
-    Permissions: Comments should be visible to all project contributors and the project manager, but only their author can update or delete them.
+    Permissions: Only authenticated users can access.
+                 Only the author of the comment can modify or delete it.
     """
     get_object_or_404(Projects, id=project_id)
     issue = get_object_or_404(Issues, id=issue_id)
